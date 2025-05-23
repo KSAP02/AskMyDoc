@@ -1,5 +1,3 @@
-
-// Get the PDF file URL from the query parameters
 const urlParams = new URLSearchParams(window.location.search);
 const pdfUrl = urlParams.get('file');
 
@@ -11,3 +9,5 @@ document.getElementById('pdf-container').onload = function() {
 	viewerWindow.postMessage({ type: 'OPEN_PDF_URL', url: pdfUrl }, '*');
 
 };
+
+

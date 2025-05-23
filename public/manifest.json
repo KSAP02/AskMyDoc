@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "AskMyDoc",
+  "version": "1.0",
+    "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }],
+  "background": {
+    "service_worker": "background.js"
+  },
+   "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
+  },
+  "web_accessible_resources": [{
+    "resources": [
+      "pdf-viewer.html",
+      "pdf-viewer-init.js",
+      "pdfjs/web/viewer.html",
+      "pdfjs/web/*",
+      "pdfjs/build/*"
+    ],
+    "matches": ["<all_urls>"]
+  }]
+}
