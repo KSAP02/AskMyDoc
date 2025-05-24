@@ -1,1 +1,13 @@
 streamlit
+fastapi
+uvicorn
+requests
+langchain
+pydantic
+python-dotenv
+PyMuPDF
+python-multipart # Form data requires this package to be installed
+docx2txt
+openai
+faiss-cpu
+langchain_community

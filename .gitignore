@@ -1,1 +1,4 @@
 askmydoc_venv
+.env
+pdfjs
+__pycache__/
