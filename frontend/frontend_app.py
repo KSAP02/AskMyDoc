@@ -12,6 +12,31 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    /* make the right column a flex container */
+    .chat-column > div:first-child {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;              /* fill full viewport height */
+    }
+    /* the chat messages area */
+    .chat-messages {
+        flex: 1 1 auto;             /* grow to fill available space */
+        overflow-y: auto;           /* enable vertical scrolling */
+        padding: 0.5rem 1rem;
+    }
+    /* keep the input box stuck to the bottom */
+    .chat-input {
+        flex: 0 0 auto;
+        padding: 0.5rem 1rem;
+        border-top: 1px solid #eee;
+        background: #fff;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
+st.markdown("""
+    <style>
         /* Remove Streamlit's default padding and margins */
         .block-container {
             padding-top: 0rem !important;
@@ -99,7 +124,6 @@ if not st.session_state.pdf_uploaded:
         try:
             files = {"file": (uploaded_file.name, pdf_bytes, "application/pdf")}
             response = requests.post(f"{BACKEND_URL}/parse_pdf", files=files, timeout=60)
-            response.raise_for_status()
             
             # Store only what we need
             st.session_state.pdf_bytes = pdf_bytes
@@ -141,9 +165,11 @@ else:
         """, unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
         st.markdown("### Chat Assistant")
         
         # Display chat history
+        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
         for chat in st.session_state.chat_history:
             with st.chat_message("user"):
                 st.write(chat["user_message"])
@@ -151,8 +177,10 @@ else:
             
             with st.chat_message("assistant"):
                 st.write(chat["assistant_response"])
+         st.markdown('</div>', unsafe_allow_html=True)
         
         # Chat input
+        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
         if prompt := st.chat_input("Ask about the PDF content..."):
             # Display user message immediately
             with st.chat_message("user"):
@@ -175,6 +203,8 @@ else:
                 "assistant_response": response,
                 "page_number": st.session_state.current_page
             })
+         st.markdown('</div>', unsafe_allow_html=True)
+         st.markdown('</div>', unsafe_allow_html=True)
         
         # Controls
         st.markdown("---")
