@@ -4,6 +4,7 @@
 
 AskMyDoc is an AI-powered assistant designed to simplify the way you interact with PDF documents. Instead of manually scanning through pages, you can have natural conversations to quickly extract key insights, clarify concepts, and locate relevant information. Whether you're working with research papers, technical manuals, or business reports, AskMyDoc helps you focus on what matters—saving time and boosting productivity with intelligent, context-aware responses.
 
+YouTube Demo Link: https://youtu.be/g4oQRwsJ5L4
 ---
 
 ## 🚀 Features
