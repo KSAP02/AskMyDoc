@@ -183,10 +183,10 @@ class QueryResponseRequest(BaseModel):
     
 # ------------------------------- FAST API ENDPOINTS -------------------------------
 @app.post("/parse_pdf")
-async def parse_pdf(request: pdfParserRequest):
+async def parse_pdf(file: UploadFile = File(...)):
     global page_chunks, page_vector_dbs
     
-    contents = await request.file.read()
+    contents = await file.read()
     
     try:
         page_wise_texts = extract_pdf_pages(contents)
@@ -207,15 +207,19 @@ async def parse_pdf(request: pdfParserRequest):
     # convert page_chunks to a list of embeddings for each page and store in a vectorDB
     page_vector_dbs = build_page_vector_stores(page_chunks)
     print(f"Vector stores created: {len(page_vector_dbs)}")
+    
+    return "Parsed and chunked successfully."
 
 @app.post("/query_response")
 async def query_response(request: QueryResponseRequest):
     top_k = 3  # Number of top relevant chunks to retrieve
     
-    if request.page_num < 1 or request.page_num > len(page_vector_dbs):
-        return {"error": "Page number out of bounds."}
+    # if request.page_num < 1 or request.page_num > len(page_vector_dbs):
+    #     return {"error": "Page number out of bounds."}
+    print(request.page_num)
     
     context = get_context(request.query, request.page_num, top_k)
+    print(f"Context retrieved for page {request.page_num}: {context[:100]}...")  # Print first 100 chars for brevity
     return get_llm_response(
         user_query=request.query, 
         context=context, 
@@ -307,4 +311,6 @@ def main():
 
 if __name__ == "__main__":
     # uvicorn.run("backend:app", host="127.0.0.1", port=8000, reload=True)
+    # Run using : "uvicorn backend.main_backend:app --host 127.0.0.1 --port 8000 --reload"
     main()
+    # conda activate "D:\Projects\AI Apps\Agents\AskMyDoc\askmydoc_venv"
