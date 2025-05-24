@@ -42,18 +42,12 @@ def parse_file_contents(file_bytes: bytes, file_name: str) -> str:
         raise ValueError("Unsupported file type")
 
 # ------------------------------- DATA MODELS -------------------------------
-class pdfParserRequest(BaseModel):
-    file: UploadFile = File(...)
-
-class ChatMessage(BaseModel):
-    user_message: str
-    assistant_response: str
-    page_number: int
 
 class ChatRequest(BaseModel):
+    """Request structure for chat endpoint"""
     message: str
     page_number: int
-    chat_history: list[ChatMessage] = []
+    chat_history: list[dict] = []
     
 # ------------------------------- FAST API ENDPOINTS -------------------------------
 @app.post("/parse_pdf")
@@ -75,12 +69,19 @@ async def chat(request: ChatRequest):
         print(f"💬 Chat query received: '{request.message}'")
         print(f"📖 Page number: {request.page_number}")
         print(f"📚 Chat history length: {len(request.chat_history)}")
+        
+        # Process chat history as dicts
+        for i, msg in enumerate(request.chat_history):
+            role = msg.get("role", "unknown")
+            content = msg.get("content", "")[:50]
+            print(f"  Message {i}: {role} - {content}...")
 
         response = f"Based on page {request.page_number} content and your question '{request.message}', here's the response..."
         
         return {"response": response}
         
     except Exception as e:
+        print(f"❌ Error in chat endpoint: {str(e)}")
         return {"error": str(e)}
 
     

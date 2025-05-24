@@ -1,40 +1,20 @@
+
 import streamlit as st
 import requests
 import base64
-from io import BytesIO
 import fitz  # PyMuPDF for PDF processing
 
-# Configure Streamlit page
+
+# Configure Streamlit page settings
 st.set_page_config(
     page_title="PDF Chat Assistant",
     layout="wide",
 )
 
-st.markdown("""
-    <style>
-    /* make the right column a flex container */
-    .chat-column > div:first-child {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;              /* fill full viewport height */
-    }
-    /* the chat messages area */
-    .chat-messages {
-        flex: 1 1 auto;             /* grow to fill available space */
-        overflow-y: auto;           /* enable vertical scrolling */
-        padding: 0.5rem 1rem;
-    }
-    /* keep the input box stuck to the bottom */
-    .chat-input {
-        flex: 0 0 auto;
-        padding: 0.5rem 1rem;
-        border-top: 1px solid #eee;
-        background: #fff;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
+BACKEND_URL = "http://localhost:8000"
 
+# Custom CSS for full-screen PDF viewer
 st.markdown("""
     <style>
         /* Remove Streamlit's default padding and margins */
@@ -68,11 +48,6 @@ st.markdown("""
             padding: 0 !important;
         }
         
-        /* Ensure columns take full height */
-        .stColumns > div {
-            height: 100vh !important;
-        }
-        
         /* Remove any gap between columns */
         .stColumns {
             gap: 0rem !important;
@@ -80,39 +55,88 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-BACKEND_URL = "http://localhost:8000"
+# =============================================================================
+# UTILITY FUNCTIONS
+# =============================================================================
 
 def get_pdf_page_count(pdf_bytes):
-    """Get total number of pages in PDF"""
+    """
+    Count total number of pages in a PDF file
+    
+    Args:
+        pdf_bytes (bytes): Raw PDF file bytes
+        
+    Returns:
+        int: Number of pages in the PDF
+    """
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         page_count = len(doc)
         doc.close()
         return page_count
-    except:
+    except Exception:
         return 0
 
-def send_chat_message(message, page_number, chat_history):
-    """Send question+page+history to /chat endpoint."""
-    payload = {
-        "message": message, 
-        "page_number": page_number,
-        "chat_history": chat_history
-    }
-    resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=30)
-    if resp.ok:
-        return resp.json().get("response", "No response received")
-    return f"Error {resp.status_code}: {resp.text}"
+def send_chat_message(message, page_number, frontend_chat_history):
+    """
+    Send chat message to backend API
+    
+    Args:
+        message (str): User's question/message
+        page_number (int): Page number user is asking about
+        frontend_chat_history (list): Previous chat messages in frontend format
+        
+    Returns:
+        str: Assistant's response or error message
+    """
+    try:
+        # Prepare payload for backend - send chat history directly
+        payload = {
+            "message": message,
+            "page_number": page_number,
+            "chat_history": frontend_chat_history
+        }
+        
+        # Send request to backend
+        response = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=30)
+        
+        if response.ok:
+            return response.json().get("response", "No response received")
+        else:
+            return f"Error {response.status_code}: {response.text}"
+            
+    except Exception as e:
+        return f"Connection error: {str(e)}"
 
-# Initialize session state - only what we need
-if "pdf_uploaded" not in st.session_state:
-    st.session_state.pdf_uploaded = False
-if "chat_history" not in st.session_state:
+# =============================================================================
+# SESSION STATE INITIALIZATION
+# =============================================================================
+
+def initialize_session_state():
+    """Initialize all session state variables with default values"""
+    if "pdf_uploaded" not in st.session_state:
+        st.session_state.pdf_uploaded = False
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = 1
+
+def clear_chat_history():
+    """Clear all chat history"""
     st.session_state.chat_history = []
-if "current_page" not in st.session_state:
-    st.session_state.current_page = 1
 
-# Upload & parse PDF
+def reset_all_session_state():
+    """Reset all session state (for new PDF upload)"""
+    st.session_state.clear()
+
+# =============================================================================
+# MAIN APPLICATION
+# =============================================================================
+
+# Initialize session state
+initialize_session_state()
+
+# Upload & parse PDF section
 if not st.session_state.pdf_uploaded:
     st.markdown("## Upload your PDF to get started")
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
@@ -120,12 +144,12 @@ if not st.session_state.pdf_uploaded:
     if uploaded_file is not None:
         pdf_bytes = uploaded_file.read()
         
-        # Send to parse_pdf endpoint
+        # Send PDF to backend for parsing
         try:
             files = {"file": (uploaded_file.name, pdf_bytes, "application/pdf")}
             response = requests.post(f"{BACKEND_URL}/parse_pdf", files=files, timeout=60)
             
-            # Store only what we need
+            # Store PDF data in session state
             st.session_state.pdf_bytes = pdf_bytes
             st.session_state.pdf_name = uploaded_file.name
             st.session_state.total_pages = get_pdf_page_count(pdf_bytes)
@@ -139,10 +163,10 @@ if not st.session_state.pdf_uploaded:
 
 # Main interface - PDF viewer + Chat
 else:
-    col1, col2 = st.columns([7, 3])
+    col1, col2 = st.columns([7, 3])  # 70% for PDF, 30% for chat
     
     with col1:
-        # PDF Viewer
+        # PDF Viewer with embedded base64 data
         pdf_base64 = base64.b64encode(st.session_state.pdf_bytes).decode()
         pdf_display = f"""
         <div class="pdf-viewer">
@@ -156,7 +180,7 @@ else:
         """
         st.markdown(pdf_display, unsafe_allow_html=True)
         
-        # Page info overlay
+        # Page info overlay (bottom-left corner)
         st.markdown(f"""
         <div style="position: fixed; bottom: 10px; left: 10px; background: rgba(255,255,255,0.9); 
                     padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 1000;">
@@ -165,57 +189,66 @@ else:
         """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
+        # =================================================================
+        # CHAT SECTION - SCROLLABLE CONTAINER
+        # =================================================================
+        
         st.markdown("### Chat Assistant")
         
-        # Display chat history
-        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
-        for chat in st.session_state.chat_history:
-            with st.chat_message("user"):
-                st.write(chat["user_message"])
-                st.caption(f"📄 Page: {chat['page_number']}")
-            
-            with st.chat_message("assistant"):
-                st.write(chat["assistant_response"])
-         st.markdown('</div>', unsafe_allow_html=True)
+        # Page selector dropdown - Users can select which page to query about
+        chat_page = st.selectbox(
+            "Select page to query:",
+            options=list(range(1, st.session_state.total_pages + 1)),
+            index=st.session_state.current_page - 1,
+            key="chat_page_selector",
+            help="Choose which PDF page you want to ask questions about"
+        )
         
-        # Chat input
-        st.markdown('<div class="chat-column">', unsafe_allow_html=True)
-        if prompt := st.chat_input("Ask about the PDF content..."):
-            # Display user message immediately
-            with st.chat_message("user"):
-                st.write(prompt)
-                st.caption(f"📄 Page: {st.session_state.current_page}")
+        # Chat container with scrollable area
+        chat_container = st.container()
+        with chat_container:
+            # Display chat history
+            for msg in st.session_state.chat_history:
+                with st.chat_message(msg["role"]):
+                    st.write(msg["content"])
+        
+        # Chat input section
+        user_query = st.chat_input("Ask about the PDF content...")
+        
+        if user_query:
+            # Add user message to chat history
+            st.chat_message("user").write(user_query)
+            st.session_state.chat_history.append({
+                "role": "user",
+                "content": user_query
+            })
             
             # Get response from backend
             with st.chat_message("assistant"):
-                with st.spinner("Processing..."):
+                with st.spinner("Processing your question..."):
                     response = send_chat_message(
-                        prompt, 
-                        st.session_state.current_page,
-                        st.session_state.chat_history
+                        message=user_query,
+                        page_number=chat_page,
+                        frontend_chat_history=st.session_state.chat_history
                     )
                     st.write(response)
             
-            # Add to chat history
+            # Add assistant response to chat history
             st.session_state.chat_history.append({
-                "user_message": prompt,
-                "assistant_response": response,
-                "page_number": st.session_state.current_page
+                "role": "assistant",
+                "content": response
             })
-         st.markdown('</div>', unsafe_allow_html=True)
-         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Controls
+        # Control buttons
         st.markdown("---")
         col_clear, col_upload = st.columns(2)
         
         with col_clear:
-            if st.button("🗑️ Clear Chat"):
-                st.session_state.chat_history = []
+            if st.button("🗑️ Clear Chat", help="Clear all chat history"):
+                clear_chat_history()
                 st.rerun()
         
         with col_upload:
-            if st.button("📤 New PDF"):
-                st.session_state.clear()
+            if st.button("📤 New PDF", help="Upload a different PDF"):
+                reset_all_session_state()
                 st.rerun()
