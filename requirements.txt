@@ -11,3 +11,6 @@ docx2txt
 openai
 faiss-cpu
 langchain_community
+langchain_experimental
+langchain-openai
+tiktoken #This is needed in order to for OpenAIEmbeddings.
