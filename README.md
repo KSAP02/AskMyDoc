@@ -20,7 +20,7 @@ AskMyDoc is an AI-powered assistant designed to simplify the way you interact wi
 
 | Layer           | Tools/Tech Used                                    |
 |----------------|-----------------------------------------------------|
-| Backend         | Python, FastAPI, LangChain, JSearch API |
+| Backend         | Python, FastAPI, LangChain |
 | Frontend        | Streamlit                                          |
 | Vector Search | FAISS                             |
 | LLM & NLP       | OpenAI LLMs |
