@@ -44,16 +44,45 @@ def parse_file_contents(file_bytes: bytes, file_name: str) -> str:
 # ------------------------------- DATA MODELS -------------------------------
 class pdfParserRequest(BaseModel):
     file: UploadFile = File(...)
+
+class ChatMessage(BaseModel):
+    user_message: str
+    assistant_response: str
+    page_number: int
+
+class ChatRequest(BaseModel):
+    message: str
+    page_number: int
+    chat_history: list[ChatMessage] = []
     
 # ------------------------------- FAST API ENDPOINTS -------------------------------
 @app.post("/parse_pdf")
-async def parse_pdf(request: pdfParserRequest):
-    contents = await request.file.read()
+async def parse_pdf(file: UploadFile = File(...)):
+    contents = await file.read()
     try:
-        text = parse_file_contents(contents, request.filename)
+         # Handle the case where filename might be None
+        filename = file.filename or "unknown.pdf"
+        text = parse_file_contents(contents, filename)
+        print(f"✅ PDF parsed successfully: {filename}")
         return {"text": text}
     except ValueError as e:
         return {"error": str(e)}
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    """Handle chat messages with context from parsed PDF"""
+    try:
+        print(f"💬 Chat query received: '{request.message}'")
+        print(f"📖 Page number: {request.page_number}")
+        print(f"📚 Chat history length: {len(request.chat_history)}")
+
+        response = f"Based on page {request.page_number} content and your question '{request.message}', here's the response..."
+        
+        return {"response": response}
+        
+    except Exception as e:
+        return {"error": str(e)}
+
     
 # ---------------------------- TESTING ENTRY POINT FOR TERMINAL ----------------------------
 import tkinter as tk
