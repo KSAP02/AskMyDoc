@@ -10,7 +10,8 @@ st.set_page_config(
     page_icon = "📃",
     layout= "centered"
 )
-BACKEND_URL = "http://localhost:8000"
+# BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = "https://askmydoc-backend.onrender.com"
 st.title("AskMyDoc 📃")
 
 # Custom CSS for full-screen PDF viewer
