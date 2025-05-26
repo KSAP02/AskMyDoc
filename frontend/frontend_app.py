@@ -4,12 +4,14 @@ import base64
 import fitz  # PyMuPDF for PDF processing
 
 # Configure Streamlit page settings
-st.set_page_config(
-    page_title="PDF Chat Assistant",
-    layout="wide",
-)
 
+st.set_page_config(
+    page_title = "AskMyDoc",
+    page_icon = "📃",
+    layout= "centered"
+)
 BACKEND_URL = "http://localhost:8000"
+st.title("AskMyDoc 📃")
 
 # Custom CSS for full-screen PDF viewer
 st.markdown("""
@@ -102,7 +104,8 @@ if not st.session_state.pdf_uploaded:
         pdf_bytes = uploaded_file.read()
         try:
             files = {"file": (uploaded_file.name, pdf_bytes, "application/pdf")}
-            response = requests.post(f"{BACKEND_URL}/parse_pdf", files=files, timeout=120)
+            with st.spinner("Parsing PDF..."):
+                response = requests.post(f"{BACKEND_URL}/parse_pdf", files=files, timeout=120)
             print(response)
             st.session_state.pdf_bytes = pdf_bytes
             st.session_state.pdf_name = uploaded_file.name
@@ -138,7 +141,7 @@ else:
         """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("### Chat Assistant")
+        st.markdown("### Chat Assistant 🤖")
         
         chat_page = st.selectbox(
             "Select page to query:",
