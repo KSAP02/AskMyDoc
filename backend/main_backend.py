@@ -241,71 +241,71 @@ def preview_chunks(page_chunks: list[list[str]], full_chunks: list[str], page_li
     print("-" * 50)
 
 # MAIN FUNCTION TO RUN THE BACKEND TESTING
-import tkinter as tk
-from tkinter import filedialog
+# import tkinter as tk
+# from tkinter import filedialog
 
-def main():
-    global page_chunks, page_vector_dbs
+# def main():
+#     global page_chunks, page_vector_dbs
     
-    # Hide the main tkinter window
-    root = tk.Tk()
-    root.withdraw()
+#     # Hide the main tkinter window
+#     root = tk.Tk()
+#     root.withdraw()
 
-    # Open the file dialog to select PDF or DOCX
-    file_path = filedialog.askopenfilename(
-        title="Select a PDF or DOCX file",
-        filetypes=[("PDF files", "*.pdf"), ("Word Documents", "*.docx *.doc")]
-    )
+#     # Open the file dialog to select PDF or DOCX
+#     file_path = filedialog.askopenfilename(
+#         title="Select a PDF or DOCX file",
+#         filetypes=[("PDF files", "*.pdf"), ("Word Documents", "*.docx *.doc")]
+#     )
 
-    if not file_path:
-        print("No file selected.")
-        return
+#     if not file_path:
+#         print("No file selected.")
+#         return
 
-    file_name = os.path.basename(file_path)
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
+#     file_name = os.path.basename(file_path)
+#     with open(file_path, "rb") as f:
+#         file_bytes = f.read()
         
-    page_wise_parsed = extract_pdf_pages(file_bytes)
-    # for i, page in enumerate(page_wise_parsed):
-    #     print(f"\n--- Page {i+1} ---\n{page}")
+#     page_wise_parsed = extract_pdf_pages(file_bytes)
+#     # for i, page in enumerate(page_wise_parsed):
+#     #     print(f"\n--- Page {i+1} ---\n{page}")
 
-    try:
-        complete_parsed_text = parse_file_contents(file_bytes)
-        # print("\n--- Extracted Text Start ---\n")
-        # print(complete_parsed_text)
-        # print("\n--- Extracted Text End ---")
-    except ValueError as e:
-        print(f"Error: {e}")
+#     try:
+#         complete_parsed_text = parse_file_contents(file_bytes)
+#         # print("\n--- Extracted Text Start ---\n")
+#         # print(complete_parsed_text)
+#         # print("\n--- Extracted Text End ---")
+#     except ValueError as e:
+#         print(f"Error: {e}")
     
-    page_chunks = chunk_page_wise_texts(page_wise_parsed)  # List[List[str]] its a list of chunks for each page
-    full_chunks = chunk_full_text(complete_parsed_text)    # List[str] its a list of chunks of the entire text
+#     page_chunks = chunk_page_wise_texts(page_wise_parsed)  # List[List[str]] its a list of chunks for each page
+#     full_chunks = chunk_full_text(complete_parsed_text)    # List[str] its a list of chunks of the entire text
     
-    # Call this after generating your chunks
-    # preview_chunks(page_chunks, full_chunks)
+#     # Call this after generating your chunks
+#     # preview_chunks(page_chunks, full_chunks)
     
-    # convert page_chunks to a list of embeddings for each page and store in a vectorDB
-    page_vector_dbs = build_page_vector_stores(page_chunks)
-    print(f"Vector stores created: {len(page_vector_dbs)}")
+#     # convert page_chunks to a list of embeddings for each page and store in a vectorDB
+#     page_vector_dbs = build_page_vector_stores(page_chunks)
+#     print(f"Vector stores created: {len(page_vector_dbs)}")
     
-    for i, db in enumerate(page_vector_dbs):
-        print(f"DB {i} type: {type(db)}")
+#     for i, db in enumerate(page_vector_dbs):
+#         print(f"DB {i} type: {type(db)}")
         
-    context = get_context("Zero-Shot Multi-Task Rearrangement", page_number=4, top_k=2)
-    print(f"Context retrieved: {context}")
+#     context = get_context("Zero-Shot Multi-Task Rearrangement", page_number=4, top_k=2)
+#     print(f"Context retrieved: {context}")
     
-    result = get_llm_response(
-        user_query="""Explain during NeRF training, this encourages the space around the
- object to be represented as empty, which will later allow
- us to freely move this object around the scene and render
- it from novel poses. Since we move the entire foreground
- NeRF, this empty space supervision is important to allow the
- two NeRFs to be rendered together correctly.
- Give me a detailed explanation of this paragraph and the words used in it.""",
-        context=context, 
-        chat_history=[]
-    )
+#     result = get_llm_response(
+#         user_query="""Explain during NeRF training, this encourages the space around the
+#  object to be represented as empty, which will later allow
+#  us to freely move this object around the scene and render
+#  it from novel poses. Since we move the entire foreground
+#  NeRF, this empty space supervision is important to allow the
+#  two NeRFs to be rendered together correctly.
+#  Give me a detailed explanation of this paragraph and the words used in it.""",
+#         context=context, 
+#         chat_history=[]
+#     )
     
-    print(f"\n\n\nLLM Response: {result}")
+#     print(f"\n\n\nLLM Response: {result}")
 
 # ---------------------------- RUN MODE ----------------------------
 
