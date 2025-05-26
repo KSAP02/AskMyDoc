@@ -11,7 +11,7 @@ services:
     #   - fromGroup: SmartIntern_env_var  # ✅ Reference your environment group
 
   - type: web
-    name: backend
+    name: askmydoc_backend
     env: docker
     plan: free
     dockerfilePath: ./backend/Dockerfile_backend
